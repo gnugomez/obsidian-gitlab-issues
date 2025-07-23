@@ -90,7 +90,7 @@ export default class GitlabIssuesPlugin extends Plugin {
 	}
 
 	private createOutputFolder() {
-		const fs = new Filesystem(app.vault, this.settings);
+		const fs = new Filesystem(this.app, this.settings);
 		fs.createOutputDirectory();
 	}
 

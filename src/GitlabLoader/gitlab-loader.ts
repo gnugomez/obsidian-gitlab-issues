@@ -12,7 +12,7 @@ export default class GitlabLoader {
 	private settings: GitlabIssuesSettings;
 
 	constructor(app: App, settings: GitlabIssuesSettings) {
-		this.fs = new Filesystem(app.vault, settings);
+		this.fs = new Filesystem(app, settings);
 		this.settings = settings;
 	}
 

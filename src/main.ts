@@ -1,4 +1,4 @@
-import {addIcon, Notice, Plugin} from 'obsidian';
+import {addIcon, Notice, Plugin, setIcon} from 'obsidian';
 import Filesystem from "./filesystem";
 import GitlabLoader from "./GitlabLoader/gitlab-loader";
 import gitlabIcon from './assets/gitlab-icon.svg';
@@ -12,6 +12,8 @@ export default class GitlabIssuesPlugin extends Plugin {
 	startupTimeout: number | null = null;
 	automaticRefresh: number | null = null;
 	iconAdded = false;
+  statusBarItem: HTMLElement | null = null;
+
 
 	async onload() {
 		logger('Starting plugin');
@@ -26,8 +28,21 @@ export default class GitlabIssuesPlugin extends Plugin {
 			this.addCommandToPalette();
 			this.refreshIssuesAtStartup();
 			this.scheduleAutomaticRefresh();
+      this.addGitlabStatusBarItem();
 		}
+
 	}
+
+  addGitlabStatusBarItem() {
+    if (!this.statusBarItem) {
+      this.statusBarItem = this.addStatusBarItem();
+      this.statusBarItem.classList.add('mod-clickable');
+      setIcon(this.statusBarItem, 'gitlab');
+      this.statusBarItem.addEventListener('click', () => {
+        this.fetchFromGitlab();
+      });
+    }
+  }
 
 	scheduleAutomaticRefresh() {
 		if (this.automaticRefresh) {
@@ -43,7 +58,6 @@ export default class GitlabIssuesPlugin extends Plugin {
 	}
 
 	onunload() {
-
 	}
 
 	async loadSettings() {

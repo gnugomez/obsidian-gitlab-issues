@@ -68,12 +68,31 @@ export class GitlabIssuesSettingTab extends PluginSettingTab {
 		if (this.plugin.settings.gitlabIssuesLevel !== "personal") {
 			const gitlabIssuesLevelIdObject = getGitlabIssuesLevel(this.plugin.settings.gitlabIssuesLevel);
 			const descriptionDocumentFragment = document.createDocumentFragment();
-			const descriptionLinkElement = descriptionDocumentFragment.createEl('a', {
-				href: gitlabIssuesLevelIdObject.url,
-				text: `Find your ${gitlabIssuesLevelIdObject.title} Id.`,
-				title: `Goto ${gitlabIssuesLevelIdObject.url}`
-			});
-			descriptionDocumentFragment.appendChild(descriptionLinkElement);
+			
+			if (this.plugin.settings.gitlabIssuesLevel === "custom") {
+				// For custom, show description and both links
+				descriptionDocumentFragment.appendText("Enter multiple sources separated by commas. Use G: for groups and P: for projects (e.g., 'G:111, P:234, P:6699'). ");
+				
+				descriptionDocumentFragment.createEl('a', {
+					href: gitlabIssuesLevelIdObject.projectUrl!,
+					text: 'Find Project IDs',
+					title: `Goto ${gitlabIssuesLevelIdObject.projectUrl!}`
+				});
+				descriptionDocumentFragment.appendText(' | ');
+				
+				descriptionDocumentFragment.createEl('a', {
+					href: gitlabIssuesLevelIdObject.groupUrl!,
+					text: 'Find Group IDs',
+					title: `Goto ${gitlabIssuesLevelIdObject.groupUrl!}`
+				});
+			} else {
+				// For project/group, show single link as before
+				descriptionDocumentFragment.createEl('a', {
+					href: gitlabIssuesLevelIdObject.url,
+					text: `Find your ${gitlabIssuesLevelIdObject.title} Id.`,
+					title: `Goto ${gitlabIssuesLevelIdObject.url}`
+				});
+			}
 
 			new Setting(containerEl)
 				.setName(`Set Gitlab ${gitlabIssuesLevelIdObject.title} Id`)

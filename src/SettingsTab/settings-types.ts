@@ -1,4 +1,4 @@
-export type GitlabIssuesLevel = 'personal' | 'project' | 'group';
+export type GitlabIssuesLevel = 'personal' | 'project' | 'group' | 'custom';
 export type GitlabRefreshInterval = "15" | "30" | "45" |"60" | "120" | "off";
 
 export interface GitlabIssuesSettings {
@@ -19,6 +19,8 @@ export interface GitlabIssuesSettings {
 export interface SettingOutLink {
 	url: string;
 	title: string;
+	projectUrl?: string;
+	groupUrl?: string;
 }
 export interface Setting {
 	title: string,

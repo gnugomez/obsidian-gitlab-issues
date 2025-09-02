@@ -6,11 +6,12 @@ import {
 	App,
 	getFrontMatterInfo,
 	parseYaml,
+	Notice,
 } from "obsidian";
 import { compile } from "handlebars";
 import { ObsidianIssue } from "./GitlabLoader/issue-types";
 import { GitlabIssuesSettings } from "./SettingsTab/settings-types";
-import { DEFAULT_TEMPLATE, logger } from "./utils/utils";
+import { DEFAULT_TEMPLATE, logger, sendNotification, needsUpdate } from "./utils/utils";
 
 export default class Filesystem {
 	private vault: Vault;
@@ -52,7 +53,7 @@ export default class Filesystem {
 			})
 			.then((template) => {
 				issues.forEach((issue: ObsidianIssue) => {
-					this.saveOrUpdateIssues(issue, template);
+					this.saveOrUpdateIssue(issue, template);
 				});
 			})
 			.catch((error) => logger(error.message));
@@ -63,7 +64,7 @@ export default class Filesystem {
 		return parseYaml(frontmatter);
 	}
 
-	private saveOrUpdateIssues(
+	private saveOrUpdateIssue(
 		issue: ObsidianIssue,
 		template: HandlebarsTemplateDelegate
 	) {
@@ -75,22 +76,35 @@ export default class Filesystem {
 		);
 
 		if (existingFile instanceof TFile) {
-			logger(`Updating existing file: ${issue.filename}`);
-
 			const newFrontmatter =
 				this.getFrontmatterFromContentString(content);
 
-			this.app.fileManager.processFrontMatter(
-				existingFile,
-				(frontmatter) => {
-					Object.assign(frontmatter, newFrontmatter);
+			// Read existing frontmatter to compare
+			this.app.vault.read(existingFile).then((existingContent) => {
+				const existingFrontmatter = this.getFrontmatterFromContentString(existingContent);
+				
+				// Only update if there are actual changes
+				if (needsUpdate(existingFrontmatter, newFrontmatter)) {
+					this.app.fileManager
+						.processFrontMatter(existingFile, (frontmatter) => {
+							Object.assign(frontmatter, newFrontmatter);
+						})
+						.then(() => {
+							sendNotification("Issue Updated", issue.title, () => {
+								this.app.workspace.getLeaf(true).openFile(existingFile);
+							});
+						})
+						.catch((error) => logger(error.message));
 				}
-			);
+			}).catch((error) => logger(error.message));
 		} else {
-			logger(`Creating new file: ${issue.filename}`);
-      
 			this.vault
 				.create(this.buildFileName(issue), content)
+				.then((file) => {
+					sendNotification("New issue created", issue.title, () => {
+            this.app.workspace.getLeaf(true).openFile(file);
+          });
+				})
 				.catch((error) => logger(error.message));
 		}
 	}

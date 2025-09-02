@@ -60,7 +60,7 @@ export const settings: SettingsTab = {
 		{
 			title: "GitLab Scope",
 			description: "The scope at which the api request will pull.",
-			options: {personal: "Personal", project: "Project", group: "Group"},
+			options: {personal: "Personal", project: "Project", group: "Group", custom: "Custom Sources"},
 			value: "gitlabIssuesLevel"
 		}
 	],
@@ -78,9 +78,24 @@ export const settings: SettingsTab = {
 		}
 	],
 	getGitlabIssuesLevel: (currentLevel) => {
-		return currentLevel === 'group'
-			? {title: "Group", url: "https://docs.gitlab.com/ee/user/group/#get-the-group-id"}
-			: {title: "Project", url: "https://docs.gitlab.com/ee/user/project/working_with_projects.html#access-the-project-overview-page-by-using-the-project-id"};
+		const levelConfig = {
+			group: {
+				title: "Group", 
+				url: "https://docs.gitlab.com/ee/user/group/#get-the-group-id"
+			},
+			project: {
+				title: "Project", 
+				url: "https://docs.gitlab.com/ee/user/project/working_with_projects.html#access-the-project-overview-page-by-using-the-project-id"
+			},
+			custom: {
+				title: "Custom Sources", 
+				url: "", // We'll handle multiple URLs differently in the UI
+				projectUrl: "https://docs.gitlab.com/ee/user/project/working_with_projects.html#access-the-project-overview-page-by-using-the-project-id",
+				groupUrl: "https://docs.gitlab.com/ee/user/group/#get-the-group-id"
+			}
+		} as const;
+
+		return levelConfig[currentLevel as keyof typeof levelConfig] || levelConfig.project;
 	},
 	gitlabDocumentation: {
 		title: 'View the Gitlab documentation',

@@ -1,0 +1,77 @@
+/* GitLab Issue Card Styles */
+.gitlab-issue-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 12px;
+	margin: 8px 0;
+	background: var(--background-secondary);
+	font-family: var(--font-text);
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.gitlab-issue-card .issue-header {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+	gap: 8px;
+}
+
+.gitlab-issue-card .issue-state {
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: bold;
+	color: white;
+}
+
+.gitlab-issue-card .issue-state.opened {
+	background-color: #1f883d;
+}
+
+.gitlab-issue-card .issue-state.closed {
+	background-color: #8250df;
+}
+
+.gitlab-issue-card .issue-title {
+	color: var(--text-normal);
+	text-decoration: none;
+	font-weight: 600;
+	flex: 1;
+}
+
+.gitlab-issue-card .issue-title:hover {
+	text-decoration: underline;
+}
+
+.gitlab-issue-card .issue-metadata {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-bottom: 8px;
+}
+
+.gitlab-issue-card .issue-labels {
+	margin-bottom: 8px;
+}
+
+.gitlab-issue-card .issue-label {
+	display: inline-block;
+	padding: 2px 6px;
+	margin-right: 4px;
+	margin-bottom: 2px;
+	background-color: var(--background-modifier-border);
+	border-radius: 3px;
+	font-size: 11px;
+}
+
+.gitlab-issue-card .issue-description {
+	color: var(--text-muted);
+	font-size: 13px;
+	margin-top: 8px;
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 8px;
+}
+
+.gitlab-issue-card.loading {
+	opacity: 0.6;
+}

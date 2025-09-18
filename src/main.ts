@@ -6,6 +6,83 @@ import { GitlabIssuesSettingTab } from "./SettingsTab/settings-tab";
 import { GitlabIssuesSettings } from "./SettingsTab/settings-types";
 import { DEFAULT_SETTINGS } from "./SettingsTab/settings";
 import { logger } from "./utils/utils";
+import { GitlabIssuePostProcessor } from "./GitlabPostProcessor/gitlab-issue-postprocessor";
+
+const GITLAB_ISSUE_CARD_CSS = `
+/* GitLab Issue Card Styles */
+.gitlab-issue-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 12px;
+	margin: 8px 0;
+	background: var(--background-secondary);
+	font-family: var(--font-text);
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.gitlab-issue-card .issue-header {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+	gap: 8px;
+}
+
+.gitlab-issue-card .issue-state {
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: bold;
+	color: white;
+}
+
+.gitlab-issue-card .issue-state.opened {
+	background-color: #1f883d;
+}
+
+.gitlab-issue-card .issue-state.closed {
+	background-color: #8250df;
+}
+
+.gitlab-issue-card .issue-title {
+	color: var(--text-normal);
+	text-decoration: none;
+	font-weight: 600;
+	flex: 1;
+}
+
+.gitlab-issue-card .issue-title:hover {
+	text-decoration: underline;
+}
+
+.gitlab-issue-card .issue-metadata {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-bottom: 8px;
+}
+
+.gitlab-issue-card .issue-labels {
+	margin-bottom: 8px;
+}
+
+.gitlab-issue-card .issue-label {
+	display: inline-block;
+	padding: 2px 6px;
+	margin-right: 4px;
+	margin-bottom: 2px;
+	background-color: var(--background-modifier-border);
+	border-radius: 3px;
+	font-size: 11px;
+}
+
+.gitlab-issue-card .issue-description {
+	color: var(--text-muted);
+	font-size: 13px;
+	margin-top: 8px;
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 8px;
+}
+`;
 
 export default class GitlabIssuesPlugin extends Plugin {
 	settings: GitlabIssuesSettings;
@@ -14,12 +91,19 @@ export default class GitlabIssuesPlugin extends Plugin {
 	iconAdded = false;
 	statusBarItem: HTMLElement | null = null;
 	isLoading = false;
+	gitlabPostProcessor: GitlabIssuePostProcessor | null = null;
 
 	async onload() {
 		logger("Starting plugin");
 
 		await this.loadSettings();
 		this.addSettingTab(new GitlabIssuesSettingTab(this.app, this));
+
+		// Add CSS for GitLab issue cards
+		this.addStyles();
+
+		// Always register the post-processor, it will check for token internally
+		this.registerGitlabPostProcessor();
 
 		if (this.settings.gitlabToken) {
 			this.createOutputFolder();
@@ -59,7 +143,13 @@ export default class GitlabIssuesPlugin extends Plugin {
 		}
 	}
 
-	onunload() {}
+	onunload() {
+		// Remove CSS styles
+		const styleEl = document.getElementById('gitlab-issues-plugin-styles');
+		if (styleEl) {
+			styleEl.remove();
+		}
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -71,6 +161,10 @@ export default class GitlabIssuesPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		// Update post-processor with new settings
+		if (this.gitlabPostProcessor) {
+			this.gitlabPostProcessor = new GitlabIssuePostProcessor(this.settings);
+		}
 	}
 
 	private addIconToLeftRibbon() {
@@ -151,5 +245,23 @@ export default class GitlabIssuesPlugin extends Plugin {
 				this.statusBarItem.classList.remove("loading");
 			}
 		}
+	}
+
+	private registerGitlabPostProcessor() {
+		this.gitlabPostProcessor = new GitlabIssuePostProcessor(this.settings);
+		this.registerMarkdownPostProcessor((element, context) => {
+			// Post-processor should be synchronous, so we handle async operations internally
+			if (this.gitlabPostProcessor) {
+				this.gitlabPostProcessor.processElement(element, context);
+			}
+		});
+	}
+
+	private addStyles() {
+		// Add CSS styles for GitLab issue cards
+		const styleEl = document.createElement('style');
+		styleEl.id = 'gitlab-issues-plugin-styles';
+		styleEl.textContent = GITLAB_ISSUE_CARD_CSS;
+		document.head.appendChild(styleEl);
 	}
 }
